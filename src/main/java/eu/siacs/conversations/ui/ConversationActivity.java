@@ -399,6 +399,7 @@ public class ConversationActivity extends XmppActivity
 		final MenuItem menuClearHistory = menu.findItem(R.id.action_clear_history);
 		final MenuItem menuAdd = menu.findItem(R.id.action_add);
 		final MenuItem menuInviteContact = menu.findItem(R.id.action_invite);
+		final MenuItem menuSuggestContact = menu.findItem(R.id.action_suggest);
 		final MenuItem menuMute = menu.findItem(R.id.action_mute);
 		final MenuItem menuUnmute = menu.findItem(R.id.action_unmute);
 
@@ -408,6 +409,7 @@ public class ConversationActivity extends XmppActivity
 			menuContactDetails.setVisible(false);
 			menuSecure.setVisible(false);
 			menuInviteContact.setVisible(false);
+			menuSuggestContact.setVisible(false);
 			menuAttach.setVisible(false);
 			menuClearHistory.setVisible(false);
 			menuMute.setVisible(false);
@@ -426,12 +428,14 @@ public class ConversationActivity extends XmppActivity
 					menuContactDetails.setVisible(false);
 					menuAttach.setVisible(getSelectedConversation().getAccount().httpUploadAvailable() && getSelectedConversation().getMucOptions().participating());
 					menuInviteContact.setVisible(getSelectedConversation().getMucOptions().canInvite());
+					menuSuggestContact.setVisible(false);
 					menuSecure.setVisible((Config.supportOpenPgp() || Config.supportOmemo()) && Config.multipleEncryptionChoices()); //only if pgp is supported we have a choice
 				} else {
 					menuContactDetails.setVisible(!this.getSelectedConversation().withSelf());
 					menuMucDetails.setVisible(false);
 					menuSecure.setVisible(Config.multipleEncryptionChoices());
 					menuInviteContact.setVisible(xmppConnectionService != null && xmppConnectionService.findConferenceServer(getSelectedConversation().getAccount()) != null);
+					menuSuggestContact.setVisible(!this.getSelectedConversation().withSelf());
 				}
 				if (this.getSelectedConversation().isMuted()) {
 					menuMute.setVisible(false);
@@ -698,6 +702,9 @@ public class ConversationActivity extends XmppActivity
 					break;
 				case R.id.action_invite:
 					inviteToConversation(getSelectedConversation());
+					break;
+				case R.id.action_suggest:
+					suggestContacts(getSelectedConversation());
 					break;
 				case R.id.action_security:
 					selectEncryptionDialog(getSelectedConversation());

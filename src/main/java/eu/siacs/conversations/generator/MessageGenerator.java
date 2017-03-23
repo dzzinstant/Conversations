@@ -213,6 +213,30 @@ public class MessageGenerator extends AbstractGenerator {
 		return packet;
 	}
 
+	public MessagePacket suggest(Conversation conversation, ArrayList<Jid> contacts) {
+		MessagePacket packet = new MessagePacket();
+		packet.setTo(conversation.getJid().toBareJid());
+		packet.setFrom(conversation.getAccount().getJid());
+
+		Element x = new Element("x");
+		x.setAttribute("xmlns", "http://jabber.org/protocol/rosterx");
+		String text = "Suggested contacts: \n";
+		for (Jid contact : contacts) {
+			Element item = new Element("item");
+			item.setAttribute("action", "add");
+			item.setAttribute("jid", contact.toBareJid().toString());
+			item.setAttribute("name", contact. toString()); // TODO: get user's alias
+			x.addChild(item);
+
+			text += "xmpp:"+contact.toBareJid().toString()+"\n";
+		}
+		packet.addChild(x);
+		packet.setBody(text);
+
+		packet.addChild("private", "urn:xmpp:carbons:2");
+		return packet;
+	}
+
 	public MessagePacket received(Account account, MessagePacket originalMessage, ArrayList<String> namespaces, int type) {
 		MessagePacket receivedPacket = new MessagePacket();
 		receivedPacket.setType(type);

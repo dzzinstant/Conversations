@@ -3150,6 +3150,13 @@ public class XmppConnectionService extends Service {
 		sendMessagePacket(conversation.getAccount(), packet);
 	}
 
+	public void suggest(Conversation conversation, ArrayList<Jid> contacts) {
+		Log.d(Config.LOGTAG, conversation.getAccount().getJid().toBareJid()
+				+ ": sending contact suggestion to " + conversation.getJid().toBareJid());
+		MessagePacket packet = mMessageGenerator.suggest(conversation, contacts);
+		sendMessagePacket(conversation.getAccount(), packet);
+	}
+
 	public void resetSendingToWaiting(Account account) {
 		for (Conversation conversation : getConversations()) {
 			if (conversation.getAccount() == account) {

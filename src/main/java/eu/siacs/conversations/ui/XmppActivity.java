@@ -88,6 +88,7 @@ public abstract class XmppActivity extends Activity {
 	protected static final int REQUEST_ANNOUNCE_PGP = 0x0101;
 	protected static final int REQUEST_INVITE_TO_CONVERSATION = 0x0102;
 	protected static final int REQUEST_CHOOSE_PGP_ID = 0x0103;
+	protected static final int REQUEST_SUGGEST_CONTACTS = 0x0104;
 	protected static final int REQUEST_BATTERY_OP = 0x13849ff;
 
 	public static final String EXTRA_ACCOUNT = "account";
@@ -148,6 +149,7 @@ public abstract class XmppActivity extends Activity {
 	};
 
 	protected ConferenceInvite mPendingConferenceInvite = null;
+	protected ContactSuggestion mPendingContactSuggestion = null;
 
 
 	protected final void refreshUi() {
@@ -542,6 +544,22 @@ public abstract class XmppActivity extends Activity {
 		startActivityForResult(intent, REQUEST_INVITE_TO_CONVERSATION);
 	}
 
+	protected void suggestContacts(Conversation conversation) {
+		Intent intent = new Intent(getApplicationContext(),
+				ChooseContactActivity.class);
+		List<String> contacts = new ArrayList<>();
+
+		contacts.add(conversation.getJid().toBareJid().toString());
+		contacts.add(conversation.getAccount().getJid().toBareJid().toString());
+
+		intent.putExtra("filter_contacts", contacts.toArray(new String[contacts.size()]));
+		intent.putExtra("conversation", conversation.getUuid());
+		intent.putExtra("multiple", true);
+		intent.putExtra("show_enter_jid", true);
+		intent.putExtra(EXTRA_ACCOUNT, conversation.getAccount().getJid().toBareJid().toString());
+		startActivityForResult(intent, REQUEST_SUGGEST_CONTACTS);
+	}
+
 	protected void announcePgp(Account account, final Conversation conversation, final Runnable onSuccess) {
 		if (account.getPgpId() == 0) {
 			choosePgpSignId(account);
@@ -890,6 +908,16 @@ public abstract class XmppActivity extends Activity {
 				}
 				mPendingConferenceInvite = null;
 			}
+		} else if (requestCode == REQUEST_SUGGEST_CONTACTS && resultCode == RESULT_OK) {
+			mPendingContactSuggestion = ContactSuggestion.parse(data);
+
+			if (mPendingContactSuggestion != null) {
+				if (mPendingContactSuggestion.execute(this)) {
+					mToast = Toast.makeText(this, R.string.suggesting_contacts, Toast.LENGTH_LONG);
+					mToast.show();
+				}
+				mPendingContactSuggestion = null;
+			}
 		}
 	}
 
@@ -1112,6 +1140,42 @@ public abstract class XmppActivity extends Activity {
 				jids.add(conversation.getJid().toBareJid());
 				return service.createAdhocConference(conversation.getAccount(), null, jids, activity.adhocCallback);
 			}
+		}
+	}
+
+	public static class ContactSuggestion {
+		private String uuid;
+		private ArrayList<Jid> jids = new ArrayList<>();
+
+		public static ContactSuggestion parse(Intent data) {
+			ContactSuggestion suggest = new ContactSuggestion();
+			suggest.uuid = data.getStringExtra("conversation");
+			if (suggest.uuid == null) {
+				return null;
+			}
+			try {
+				if (data.getBooleanExtra("multiple", false)) {
+					String[] toAdd = data.getStringArrayExtra("contacts");
+					for (String item : toAdd) {
+						suggest.jids.add(Jid.fromString(item));
+					}
+				} else {
+					suggest.jids.add(Jid.fromString(data.getStringExtra("contact")));
+				}
+			} catch (final InvalidJidException ignored) {
+				return null;
+			}
+			return suggest;
+		}
+
+		public boolean execute(XmppActivity activity) {
+			XmppConnectionService service = activity.xmppConnectionService;
+			Conversation conversation = service.findConversationByUuid(this.uuid);
+			if (conversation == null) {
+				return false;
+			}
+			service.suggest(conversation, jids);
+			return true;
 		}
 	}
 

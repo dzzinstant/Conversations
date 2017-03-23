@@ -49,6 +49,7 @@
 	<string name="share_with">Share with…</string>
 	<string name="start_conversation">Start Conversation</string>
 	<string name="invite_contact">Invite Contact</string>
+	<string name="suggest_contacts">Suggest Contacts</string>
 	<string name="contacts">Contacts</string>
 	<string name="cancel">Cancel</string>
 	<string name="set">Set</string>
@@ -657,6 +658,7 @@
 	<string name="conference_subject">Subject</string>
 	<string name="choose_participants">Choose participants</string>
 	<string name="creating_conference">Creating conference…</string>
+	<string name="suggesting_contacts">Suggesting contacts…</string>
 	<string name="invite_again">Invite again</string>
 	<string name="gp_short">Short</string>
 	<string name="gp_medium">Medium</string>
