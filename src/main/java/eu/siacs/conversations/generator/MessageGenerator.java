@@ -221,14 +221,21 @@ public class MessageGenerator extends AbstractGenerator {
 		Element x = new Element("x");
 		x.setAttribute("xmlns", "http://jabber.org/protocol/rosterx");
 		String text = "Suggested contacts: \n";
-		for (Jid contact : contacts) {
+		for (Jid jid : contacts) {
+			Contact contact = conversation.getAccount().getRoster().getContact(jid);
 			Element item = new Element("item");
 			item.setAttribute("action", "add");
-			item.setAttribute("jid", contact.toBareJid().toString());
-			item.setAttribute("name", contact. toString()); // TODO: get user's alias
+			item.setAttribute("jid", jid.toBareJid().toString());
+			item.setAttribute("name", contact.getDisplayName());
+
+			for (String group : contact.getGroups()) {
+				if (group != null) {
+					item.addChild("group").setContent(group);
+				}
+			}
 			x.addChild(item);
 
-			text += "xmpp:"+contact.toBareJid().toString()+"\n";
+			text += "xmpp:"+jid.toBareJid().toString()+"\n";
 		}
 		packet.addChild(x);
 		packet.setBody(text);
