@@ -221,6 +221,57 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
 		return null;
 	}
 
+	private class Suggestion {
+		final Jid jid;
+		final Contact originator;
+		final List<Jid> items;
+		Suggestion(Jid jid, Contact originator, List<Jid> items) {
+			this.jid = jid;
+			this.originator = originator;
+			this.items = items;
+		}
+
+		public boolean execute(Account account) {
+			if (jid != null && originator.mutualPresenceSubscription()) {
+				for (Jid item : items) {
+					Contact suggested = account.getRoster().getContactFromRoster(item);
+					if (suggested == null) {
+						Log.d(Config.LOGTAG, originator.getJid().toString()+" suggested contact "+item.toString()+", adding to roster");
+						suggested = account.getRoster().getContact(item);
+						mXmppConnectionService.createContact(suggested);
+					} else {
+						Log.d(Config.LOGTAG, originator.getJid().toString()+" suggested contact "+item.toString()+", ignoring (already in roster)");
+					}
+				}
+				return true;
+			}
+			return false;
+		}
+	}
+
+	private Suggestion extractSuggestion(Account account, Element message) {
+		Element x = message.findChild("x", "http://jabber.org/protocol/rosterx");
+		if (x != null) {
+			List<Element> xitems = x.getChildren();
+			ArrayList<Jid> items = new ArrayList<Jid>();
+			for (Element xitem : xitems) {
+				if ("item".equals(xitem.getName())) {
+					Jid jid = xitem.getAttributeAsJid("jid");
+					if (jid != null) {
+						items.add(jid);
+					}
+				}
+			}
+			if (items.size() > 0) {
+				Jid from = message.getAttributeAsJid("from");
+				Contact originator = from == null ? null : account.getRoster().getContact(from);
+
+				return new Suggestion(message.getAttributeAsJid("from"), originator, items);
+			}
+		}
+		return null;
+	}
+
 	private static String extractStanzaId(Element packet, boolean isTypeGroupChat, Conversation conversation) {
 		final Jid by;
 		final boolean safeToExtract;
@@ -402,6 +453,11 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
 
 		Invite invite = extractInvite(account, packet);
 		if (invite != null && invite.execute(account)) {
+			return;
+		}
+
+		Suggestion suggestion = extractSuggestion(account, packet);
+		if (suggestion != null && suggestion.execute(account)) {
 			return;
 		}
 
