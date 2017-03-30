@@ -233,6 +233,7 @@ public class Contact implements ListItem, Blockable {
 	public void clearPresences() {
 		this.presences.clearPresences();
 		this.resetOption(Options.PENDING_SUBSCRIPTION_REQUEST);
+		this.resetOption(Options.PENDING_SUGGESTION_REQUEST);
 	}
 
 	public Presence.Status getShownStatus() {
@@ -558,5 +559,6 @@ public class Contact implements ListItem, Blockable {
 		public static final int PENDING_SUBSCRIPTION_REQUEST = 5;
 		public static final int DIRTY_PUSH = 6;
 		public static final int DIRTY_DELETE = 7;
+		public static final int PENDING_SUGGESTION_REQUEST = 8;
 	}
 }

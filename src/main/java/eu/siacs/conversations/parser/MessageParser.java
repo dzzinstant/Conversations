@@ -233,16 +233,20 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
 
 		public boolean execute(Account account) {
 			if (jid != null && originator.mutualPresenceSubscription()) {
+				int suggestedCount = 0;
 				for (Jid item : items) {
 					Contact suggested = account.getRoster().getContactFromRoster(item);
 					if (suggested == null) {
 						Log.d(Config.LOGTAG, originator.getJid().toString()+" suggested contact "+item.toString()+", adding to roster");
 						suggested = account.getRoster().getContact(item);
 						mXmppConnectionService.createContact(suggested);
+						suggestedCount++;
 					} else {
 						Log.d(Config.LOGTAG, originator.getJid().toString()+" suggested contact "+item.toString()+", ignoring (already in roster)");
 					}
 				}
+				if (suggestedCount > 0)
+					originator.setOption(Contact.Options.PENDING_SUGGESTION_REQUEST);
 				return true;
 			}
 			return false;

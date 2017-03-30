@@ -1023,6 +1023,15 @@ public class ConversationFragment extends Fragment implements EditMessage.Keyboa
 		}
 	};
 
+	private OnClickListener mAddSuggestionsListener = new OnClickListener() {
+		@Override
+		public void onClick(View v) {
+			Contact originator = conversation.getContact();
+			originator.resetOption(Contact.Options.PENDING_SUGGESTION_REQUEST);
+			hideSnackbar();
+		}
+	};
+
 	private void updateSnackBar(final Conversation conversation) {
 		final Account account = conversation.getAccount();
 		final XmppConnection connection = account.getXmppConnection();
@@ -1086,6 +1095,8 @@ public class ConversationFragment extends Fragment implements EditMessage.Keyboa
 				&& !conversation.isBlocked()
 				&& conversation.isWithStranger()) {
 			showSnackbar(R.string.received_message_from_stranger,R.string.block, mBlockClickListener);
+		} else if (contact.getOption(Contact.Options.PENDING_SUGGESTION_REQUEST)) {
+			showSnackbar(R.string.contact_sent_suggestion, R.string.select_suggested_contacts, mAddSuggestionsListener);
 		} else {
 			hideSnackbar();
 		}
